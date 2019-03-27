@@ -50,6 +50,7 @@ import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
 from math import pi
+import random
 from std_msgs.msg import String
 from moveit_commander.conversions import pose_to_list
 ## END_SUB_TUTORIAL
@@ -62,6 +63,7 @@ def all_close(goal, actual, tolerance):
   @param: tolerance  A float
   @returns: bool
   """
+  #print ("in all_close, goal and actual", goal, actual)
   all_equal = True
   if type(goal) is list:
     for index in range(len(goal)):
@@ -73,6 +75,7 @@ def all_close(goal, actual, tolerance):
 
   elif type(goal) is geometry_msgs.msg.Pose:
     return all_close(pose_to_list(goal), pose_to_list(actual), tolerance)
+
 
   return True
 
@@ -96,12 +99,13 @@ class MoveGroupPythonIntefaceTutorial(object):
     ## to the world surrounding the robot:
     scene = moveit_commander.PlanningSceneInterface()
 
+
     ## Instantiate a `MoveGroupCommander`_ object.  This object is an interface
     ## to one group of joints.  In this case the group is the joints in the Panda
     ## arm so we set ``group_name = panda_arm``. If you are using a different robot,
     ## you should change this value to the name of your robot arm planning group.
     ## This interface can be used to plan and execute motions on the Panda:
-    group_name = "arm"
+    group_name = "bh_arm"
     group = moveit_commander.MoveGroupCommander(group_name)
 
     ## We create a `DisplayTrajectory`_ publisher which is used later to publish
@@ -118,21 +122,21 @@ class MoveGroupPythonIntefaceTutorial(object):
     ## ^^^^^^^^^^^^^^^^^^^^^^^^^
     # We can get the name of the reference frame for this robot:
     planning_frame = group.get_planning_frame()
-    print "============ Reference frame: %s" % planning_frame
+    #print "============ Reference frame: %s" % planning_frame
 
     # We can also print the name of the end-effector link for this group:
     eef_link = group.get_end_effector_link()
-    print "============ End effector: %s" % eef_link
+    #print "============ End effector: %s" % eef_link
 
     # We can get a list of all the groups in the robot:
     group_names = robot.get_group_names()
-    print "============ Robot Groups:", robot.get_group_names()
+    #print "============ Robot Groups:", robot.get_group_names()
 
     # Sometimes for debugging it is useful to print the entire state of the
     # robot:
-    print "============ Printing robot state"
-    print robot.get_current_state()
-    print ""
+    #print "============ Printing robot state"
+    #print robot.get_current_state()
+    #print ""
     ## END_SUB_TUTORIAL
 
     # Misc variables
@@ -145,7 +149,7 @@ class MoveGroupPythonIntefaceTutorial(object):
     self.eef_link = eef_link
     self.group_names = group_names
 
-  def go_to_joint_state(self, x):
+  def go_to_joint_state(self, x, q, r, t, y, i, o):
     # Copy class variables to local variables to make the web tutorials more clear.
     # In practice, you should use the class variables directly unless you have a good
     # reason not to.
@@ -159,13 +163,17 @@ class MoveGroupPythonIntefaceTutorial(object):
     ## thing we want to do is move it to a slightly better configuration.
     # We can get the joint values from the group and adjust some of the values:
     joint_goal = group.get_current_joint_values()
+    # joint_goal[0] = x*pi/180
+    # joint_goal[1] = q*pi/180
+    # joint_goal[2] = r*pi/180
+    # joint_goal[3] = t*pi/180
     joint_goal[0] = x*pi/180
-    joint_goal[1] = 0
-    joint_goal[2] = 0
-    joint_goal[3] = 0
-    # joint_goal[4] = 0
-    # joint_goal[5] = pi/3
-    # joint_goal[6] = 0
+    joint_goal[1] = q*pi/180
+    joint_goal[2] = r*pi/180
+    joint_goal[3] = t*pi/180
+    joint_goal[4] = y*pi/180
+    joint_goal[5] = i*pi/180
+    joint_goal[6] = o*pi/180
 
     # The go command can be called with joint values, poses, or without any
     # parameters if you have already set the pose or joint target for the group
@@ -183,7 +191,7 @@ class MoveGroupPythonIntefaceTutorial(object):
     current_joints = self.group.get_current_joint_values()
     return all_close(joint_goal, current_joints, 0.01)
 
-  def go_to_pose_goal(self):
+  def go_to_pose_goal(self, w, x, y, z):
     # Copy class variables to local variables to make the web tutorials more clear.
     # In practice, you should use the class variables directly unless you have a good
     # reason not to.
@@ -196,10 +204,10 @@ class MoveGroupPythonIntefaceTutorial(object):
     ## We can plan a motion for this group to a desired pose for the
     ## end-effector:
     pose_goal = geometry_msgs.msg.Pose()
-    pose_goal.orientation.w = 1.0
-    pose_goal.position.x = 0.4
-    pose_goal.position.y = 0.1
-    pose_goal.position.z = 0.2
+    pose_goal.orientation.w = w
+    pose_goal.position.x = x
+    pose_goal.position.y = y
+    pose_goal.position.z = z
     group.set_pose_target(pose_goal)
 
     ## Now, we call the planner to compute the plan and execute it.
@@ -446,10 +454,57 @@ def main():
 
     print "============ Press `Enter` to execute a movement using a joint state goal ..."
     raw_input()
-    for i in range(1, 360):
-        tutorial.go_to_joint_state(i)
-        print tutorial.robot.get_current_state().joint_state.position[0]
-        print ("towards", i)
+    # print "attempt 1 0000"
+    # tutorial.go_to_joint_state(0, 0, 0, 0)
+    # print tutorial.robot.get_current_state().joint_state.position[0]
+    # print "attempt 2 straight"
+    # tutorial.go_to_joint_state(0, -1.5877287243185778, -0.009993676244798522, 1.4394810047289273)
+    # print tutorial.robot.get_current_state().joint_state.position[0]
+    # #1.4708935363709985
+    # p = geometry_msgs.msg.PoseStamped()
+    # p.header.frame_id = tutorial.robot.get_planning_frame()
+    # p.pose.position.x = 0.5
+    # p.pose.position.y = 0.5
+    # p.pose.position.z = 0.7
+    # tutorial.scene.add_box("table", p, (0.5, 0.5, 1.4))
+    # p.pose.position.x = -0.5
+    # p.pose.position.y = -0.5
+    # p.pose.position.z = 0.7
+    # tutorial.scene.add_box("table2", p, (0.5, 0.5, 1.4))
+    # p.pose.position.x = 0.
+    # p.pose.position.y = 0.
+    # p.pose.position.z = -0.01
+    # tutorial.scene.add_box("groundplane", p, (2, 2, 0.009))
+
+
+    # #last used:
+    # tutorial.go_to_joint_state(0, random.randint(0,360), 0, 0)
+
+    # while int(tutorial.robot.get_current_state().joint_state.position[1]) not in range(-4, -2):
+    #     tutorial.go_to_joint_state(0, random.randint(0,360), 0, 0)
+    #     print ("arrived at", tutorial.robot.get_current_state().joint_state.position[1])
+
+
+
+
+
+    # for i in range(0, 361, 180):
+    #     print ("start from:", tutorial.robot.get_current_state().joint_state.position[1])
+    #     print ("towards", i)
+    #     tutorial.go_to_joint_state(0, i, 0, 0)
+    #     #print ("what dis", tutorial.group.get_current_joint_values())
+    #     print ("arrived at", tutorial.robot.get_current_state().joint_state.position[1])
+    #     print ("pos of end effector:", tutorial.robot.get_current_state().joint_state.position[3])
+
+        
+
+
+
+    print "============ Python tutorial demo complete!"
+  except rospy.ROSInterruptException:
+    return
+  except KeyboardInterrupt:
+    return
     # tutorial.go_to_joint_state(-90*pi/180)
     # print tutorial.robot.get_current_state().joint_state.position[0]
     # print "towards3"
@@ -497,11 +552,7 @@ def main():
     # raw_input()
     # tutorial.remove_box()
 
-    print "============ Python tutorial demo complete!"
-  except rospy.ROSInterruptException:
-    return
-  except KeyboardInterrupt:
-    return
+ 
 
 if __name__ == '__main__':
   main()
