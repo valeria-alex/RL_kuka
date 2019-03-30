@@ -51,7 +51,7 @@ import moveit_msgs.msg
 import geometry_msgs.msg
 from math import pi
 import random
-from std_msgs.msg import String
+from std_msgs.msg import String, Float64
 from moveit_commander.conversions import pose_to_list
 ## END_SUB_TUTORIAL
 
@@ -266,6 +266,28 @@ class MoveGroupPythonIntefaceTutorial(object):
     return plan, fraction
 
     ## END_SUB_TUTORIAL
+  def close_g(self):
+        pub1 = rospy.Publisher('/bh/finger1_controller/command', Float64, queue_size=10)
+        pub2 = rospy.Publisher('/bh/finger2_controller/command', Float64, queue_size=10)
+        pub3 = rospy.Publisher('/bh/finger3_controller/command', Float64, queue_size=10)
+        #rospy.init_node('talker', anonymous=True)
+        #rate = rospy.Rate(10) # 10hz
+        pub1.publish(0.0)
+        pub2.publish(0.0)
+        pub3.publish(0.0)
+
+
+  def open_g(self):
+        pub1 = rospy.Publisher('/bh/finger1_controller/command', Float64, queue_size=10)
+        pub2 = rospy.Publisher('/bh/finger2_controller/command', Float64, queue_size=10)
+        pub3 = rospy.Publisher('/bh/finger3_controller/command', Float64, queue_size=10)
+        #rospy.init_node('talker', anonymous=True)
+        #rate = rospy.Rate(10) # 10hz
+        pub1.publish(-1.0)
+        pub2.publish(-1.0)
+        pub3.publish(-1.0)
+
+
 
   def display_trajectory(self, plan):
     # Copy class variables to local variables to make the web tutorials more clear.
